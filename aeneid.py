@@ -1,15 +1,15 @@
-# For most users, this is the only import required
-import string
 from cltk import NLP
 from gensim.models import Word2Vec
 import gensim 
+#from cltk.languages.example_texts import get_example_text
 
-cltk_nlp = NLP(language="lat")
-cltk_nlp.pipeline.processes.pop(-1)
+latin_nlp = NLP("lat")
+latin_nlp.pipeline.processes.pop(-1)
+sentences = []
 
 
 
-stopwords = ['ab', 'ac', 'ad', 'adhic', 'aliqui', 'aliquis', 'an', 'ante', 'apud', 
+stopword = ['ab', 'ac', 'ad', 'adhic', 'aliqui', 'aliquis', 'an', 'ante', 'apud', 
           'at', 'atque', 'aut', 'autem', 'cum', 'cur', 'de', 'deinde', 'dum', 
           'ego', 'enim', 'ergo', 'es', 'est', 'et', 'etiam', 'etsi', 'ex', 'fio',
             'haud', 'hic', 'iam', 'idem', 'igitur', 'ille', 'in', 'infra', 'inter',
@@ -18,81 +18,54 @@ stopwords = ['ab', 'ac', 'ad', 'adhic', 'aliqui', 'aliquis', 'an', 'ante', 'apud
               'qui', 'quia', 'quicumque', 'quidem', 'quilibet', 'quis', 
               'quisnam', 'quisquam', 'quisque', 'quisquis', 'quo', 'quoniam', 
               'sed', 'si', 'sic', 'sive', 'sub', 'sui', 'sum', 'super', 'suus', 
-              'tam', 'tamen', 'trans', 'tu', 'tum', 'ubi', 'uel', 'uero', 'unus', 'ut']
-to_be_removed = set(stopwords)
-f = open("aeneid_tokens.txt", "w")
-tokens = []
+              'tam', 'tamen', 'trans', 'tu', 'tum', 'ubi', 'uel', 'uero',
+            'unus', 'ut', '.', ',', ';', '?', '\'', '\'', '(', ')', "!"]
+stopwords = set(stopword)
 
-for i in range(1,13):
+file1 = open("MyFile.txt", "w")
+# f = open("aeneid_tokens.txt", "w")
+for i in range(1,5):
+    if i == 3 or i == 6 or i == 8:
+        continue
 
     textname = open(f'testing/latin/text/vergil/aen{i}.txt', "r")
-    text = textname.read()
-    #text = text.translate(str.maketrans('', '', string.punctuation))
-    textname.close()
-    text = cltk_nlp.analyze(text)
+    latin_text = textname.read()
+    print(i)
+    latin_doc = latin_nlp.analyze(latin_text)
+    # sentences = []  # This is what you want
+    for sentence in latin_doc.sentences:
+        lemmatized_words = []
+        for word in sentence.words:
+            if word.lemma not in stopwords:
+                lemmatized_words.append(word.lemma)
+                file1.write(word.lemma + " ")
 
-    temp = text.lemmata[0:100]
-    print(temp)
-    lemma_tokens = [i for i in temp if i not in to_be_removed] 
-
-    for items in lemma_tokens:
-        f.write("%s " % items)
-    f.write("\n")
-    
-    tokens.append(lemma_tokens)
-
-    for i in range(21, len(text.lemmata), 20):
-
-        temp = text.lemmata[i-20:i]
-        lemma_tokens = [i for i in temp if i not in to_be_removed] 
-
-        for items in lemma_tokens:
-            f.write("%s " % items)
-        f.write("\n")
-
-        tokens.append(lemma_tokens)
-
-
+        sentences.append(lemmatized_words)
+        file1.write("\n")
 
 # for i in range(1,11):
-#     textname = open(f'testing/latin/text/lat_text_latin_library/vergil/ec{i}.txt', "r")
-#     text = textname.read()
-#     #text = text.translate(str.maketrans('', '', string.punctuation))
-#     textname.close()
+#     if i == 1 or i == 6 or i == 8:
+#         continue
+#     textname = open(f'testing/latin/text/vergil/ec{i}.txt', "r")
+#     latin_text = textname.read()
+#     print(i)
+#     latin_doc = latin_nlp.analyze(latin_text)
+#     # sentences = []  # This is what you want
+#     for sentence in latin_doc.sentences:
+#         lemmatized_words = []
+#         for word in sentence.words:
+#             if word.lemma not in stopwords:
+#                 lemmatized_words.append(word.lemma)
+#                 file1.write(word.lemma + " ")
 
-#     text = cltk_nlp.analyze(text)
-    # print(text.lemmata[0:100])
+#         sentences.append(lemmatized_words)
+#         file1.write("\n")
 
+file1.close()
 
-    # for i in range(21, len(text.lemmata), 20):
-    #     temp = text.lemmata[i-20:i]
+model = gensim.models.Word2Vec(sentences, window=10, min_count=2, workers=5)
 
-    #     lemma_tokens = [i for i in temp if i not in to_be_removed] 
-
-    #     for items in lemma_tokens:
-    #         f.write("%s " % items)
-    #     f.write("\n")
-
-    #     tokens.append(lemma_tokens)
-f.close()
-
-print(tokens[0:150])
-
-
-# for i in range(1,5):
-#     textname = open(f"testing/latin/text/lat_text_latin_library/vergil/geo{i}.txt", "r")
-#     text = textname.read()
-#     text = text.translate(str.maketrans('', '', string.punctuation))
-#     textname.close()
-
-#     text = cltk_nlp.analyze(text)
-#     lemma_tokens = text.lemmata[0:]
-#     tokens.append(lemma_tokens)
-
-model = gensim.models.Word2Vec(tokens, window=6, min_count=4, workers=5)
-# model.train(tokens,total_examples=len(tokens),epochs=1)
-
-print(len(tokens))
+print(len(sentences))
 
 keyword1 = 'amor'
 print(keyword1)
